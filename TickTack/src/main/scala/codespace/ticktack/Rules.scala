@@ -6,6 +6,8 @@ trait Rules {
 
   def isWin(f:Field): Option[Label]
 
+  def isDraw(f:Field): Boolean
+
   def emptyField: Field
 
 }

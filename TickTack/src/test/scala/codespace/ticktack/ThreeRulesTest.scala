@@ -1,5 +1,6 @@
 package codespace.ticktack
 
+import codespace.ticktack.strategies.{ConsolePlayer, MachinePlayer}
 import org.scalatest._
 
 class ThreeRulesTest extends FunSuite
@@ -25,7 +26,7 @@ class ThreeRulesTest extends FunSuite
      }
    }
 
-   test("check thet win is win") {
+   test("check that win is win") {
      val (c,t,n) = (Some(CrossLabel),Some(ToeLabel),None)
      val data = IndexedSeq(
        IndexedSeq(c,n,t),
@@ -33,12 +34,138 @@ class ThreeRulesTest extends FunSuite
        IndexedSeq(t,n,c)
      )
      val r = new ThreeRules
-     val r1 = new ThreeRules
-     var f = new r.ThreeField(data)
-     val f1 = new r1.ThreeField(data)
-     //f = f1
-     r.isWin(f)==Some(c)
+     val f = new r.ThreeField(data)
+     assert(r.isWin(f) == c)
    }
+
+  /*
+  test("check that draw is draw") {
+    val (c,t,n) = (Some(CrossLabel),Some(ToeLabel),None)
+    val data = IndexedSeq(
+      IndexedSeq(t,n,c),
+      IndexedSeq(c,c,t),
+      IndexedSeq(t,n,c)
+    )
+    val r = new ThreeRules
+    val f = new r.ThreeField(data)
+    assert(r.isDraw(f) === true)
+  }
+
+  */
+
+  test("column win is win") {
+    val (c,t,n) = (Some(CrossLabel),Some(ToeLabel),None)
+    val data = IndexedSeq(
+      IndexedSeq(c,n,t),
+      IndexedSeq(n,c,t),
+      IndexedSeq(t,n,t)
+    )
+    val r = new ThreeRules
+    val f = new r.ThreeField(data)
+    assert(r.isWin(f) == t)
+  }
+
+  test("row win is win") {
+    val (c,t,n) = (Some(CrossLabel),Some(ToeLabel),None)
+    val data = IndexedSeq(
+      IndexedSeq(c,n,t),
+      IndexedSeq(n,c,t),
+      IndexedSeq(t,t,t)
+    )
+    val r = new ThreeRules
+    val f = new r.ThreeField(data)
+    assert(r.isWin(f) == t)
+  }
+
+  test("first player selects center as a first step") {
+    val (c,t,n) = (Some(CrossLabel),Some(ToeLabel),None)
+    val data = IndexedSeq(
+      IndexedSeq(n,n,n),
+      IndexedSeq(n,n,n),
+      IndexedSeq(n,n,n)
+    )
+
+    val rules = new ThreeRules
+    var field = new rules.ThreeField(data)
+
+    val player = new MachinePlayer(CrossLabel, rules)
+
+    val nextMove = player.nextStep(field)
+
+    assert(nextMove._1 === (1, 1))
+  }
+
+  test("should prevent 3 in diag") {
+    val (c,t,n) = (Some(CrossLabel),Some(ToeLabel),None)
+    val data = IndexedSeq(
+      IndexedSeq(n,n,t),
+      IndexedSeq(n,t,n),
+      IndexedSeq(n,n,n)
+    )
+
+    val rules = new ThreeRules
+    var field = new rules.ThreeField(data)
+
+    val player = new MachinePlayer(CrossLabel, rules)
+
+    val nextMove = player.nextStep(field)
+
+    assert(nextMove._1 == (2, 0))
+  }
+
+  test("should prevent 3 in row") {
+    val (c,t,n) = (Some(CrossLabel),Some(ToeLabel),None)
+    val data = IndexedSeq(
+      IndexedSeq(n,n,n),
+      IndexedSeq(t,t,n),
+      IndexedSeq(n,n,n)
+    )
+
+    val rules = new ThreeRules
+    var field = new rules.ThreeField(data)
+
+    val player = new MachinePlayer(CrossLabel, rules)
+
+    val nextMove = player.nextStep(field)
+
+    assert(nextMove._1 === (1, 2))
+  }
+
+  test("should prevent 3 in column") {
+    val (c,t,n) = (Some(CrossLabel),Some(ToeLabel),None)
+    val data = IndexedSeq(
+      IndexedSeq(c,n,n),
+      IndexedSeq(n,c,n),
+      IndexedSeq(t,n,t)
+    )
+
+    val rules = new ThreeRules
+    var field = new rules.ThreeField(data)
+
+    val player = new MachinePlayer(CrossLabel, rules)
+
+    val nextMove = player.nextStep(field)
+
+    assert(nextMove._1 === (2, 1))
+  }
+
+  test("tends to win") {
+    val (c,t,n) = (Some(CrossLabel),Some(ToeLabel),None)
+    val data = IndexedSeq(
+      IndexedSeq(c,n,n),
+      IndexedSeq(n,c,c),
+      IndexedSeq(t,n,t)
+    )
+
+    val rules = new ThreeRules
+    var field = new rules.ThreeField(data)
+
+    val player = new MachinePlayer(CrossLabel, rules)
+
+    val nextMove = player.nextStep(field)
+
+    assert(nextMove._1 === (1, 0))
+  }
 
 
 }

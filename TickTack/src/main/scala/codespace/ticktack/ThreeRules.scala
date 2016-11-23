@@ -28,8 +28,8 @@ class ThreeRules extends Rules {
         case Some(label) =>
           throw new IllegalArgumentException("label already filled")
         case None   =>
-          val nextRow: IndexedSeq[Option[Label]] = data(i).patch(j,Seq(Some(l)),j)
-          val nextData: IndexedSeq[IndexedSeq[Option[Label]]] = data.patch(i,Seq(nextRow),i)
+          val nextRow: IndexedSeq[Option[Label]] = data(i).patch(j,Seq(Some(l)),1)
+          val nextData: IndexedSeq[IndexedSeq[Option[Label]]] = data.patch(i,Seq(nextRow),1)
           ThreeField(nextData)
       }
     }
@@ -40,6 +40,20 @@ class ThreeRules extends Rules {
       require(i < data.length)
       require(j >= 0)
       require(j < data(0).length)
+    }
+
+    override def dump(): Unit = {
+
+      for(i <- 0 until data.length) {
+        for(j <- 0 until data(0).length) {
+          data(i)(j) match {
+            case Some(CrossLabel) => print(" X")
+            case Some(ToeLabel) => print(" O")
+            case _ => print(" _")
+          }
+        }
+        println()
+      }
     }
 
   }
@@ -72,9 +86,9 @@ class ThreeRules extends Rules {
 
     def diagonalWin():Option[Label] = {
 
-      def checkLeft(l:Label) = f.get(0,0) == f.get(2,2) && f.get(0,0)==l
+      def checkLeft(l:Label) = (f.get(0,0) == f.get(2,2)) && (f.get(0,0) == Some(l))
 
-      def checkRight(l:Label) = f.get(2,0) == f.get(0,2) && f.get(2,0)==l
+      def checkRight(l:Label) = (f.get(2,0) == f.get(0,2)) && (f.get(2,0) == Some(l))
 
       f.get(1,1) flatMap { l =>
          if (checkLeft(l)||checkRight(l))
@@ -97,4 +111,35 @@ class ThreeRules extends Rules {
   }
 
   override def emptyField: Field = new ThreeField(3)
+
+  override def isDraw(f: Field): Boolean = {
+
+    def scanLabels(fnc: Int => Option[Label]): Boolean = {
+      (0 to 2).map(fnc).filter(!_.isEmpty).length != 2
+    }
+
+    def scanRows(): Boolean = {
+
+      var winIsPossible = false
+
+      for(i <- 0 to 2 if !winIsPossible)
+        winIsPossible = scanLabels(f.get(i, _))
+
+      winIsPossible
+    }
+
+    def scanColumns(): Boolean = {
+
+      var winIsPossible = false
+
+      for(j <- 0 to 2 if !winIsPossible)
+        winIsPossible = scanLabels(f.get(_, j))
+
+      winIsPossible
+    }
+
+    def scanDiagonals(): Boolean = scanLabels(i => f.get(i, i)) || scanLabels(i => f.get(i, 2-i))
+
+    !(scanRows() || scanColumns() || scanDiagonals())
+  }
 }

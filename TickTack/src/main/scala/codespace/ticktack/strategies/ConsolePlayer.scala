@@ -1,26 +1,42 @@
 package codespace.ticktack.strategies
 
 import codespace.ticktack.{Field, Label, Player, Rules}
+import scala.io.StdIn.{readLine}
 
 class ConsolePlayer(label:Label,
                     rules:Rules) extends BasePlayer(label,rules) {
 
-  override def nextStep(f: Field): ((Int, Int), Player) = ???
+  override def nextStep(f: Field): ((Int, Int), Player) = {
 
-  override def tell(s: String): Player = ???
+    var ij: Option[(Int, Int)] = None
 
-  Console.println(s"Hi, my label is ${label}, this.label = ${this.label}")
+    do {
+      print("Enter your code: ")
+      val line = readLine()
+      ij = stringToPos(line): Option[(Int,Int)]
+    } while(ij.isEmpty)
+
+    (ij.get, this)
+  }
+
+  override def tell(s: String): Player = {
+    println(s)
+    this
+  }
+
+  //Console.println(s"Hi, my label is ${label}, this.label = ${this.label}")
 
   def stringToPos(code:String):Option[(Int,Int)] =
   {
     if (code.length != 2) None
     else try {
-      val rexpr="([A-C])([0-3])".r
+      val rexpr="([A-C])([0-2])".r
       val l = rexpr.findAllIn(code)
       if (l.hasNext) {
-        val x = l.group(0).charAt(0) - 'A'
-        val y = l.group(1).charAt(0) - '0'
+        val x = l.group(1).charAt(0) - 'A'
+        val y = l.group(2).charAt(0) - '0'
         val xy = (x.toInt, y.toInt)
+
         if (x < 3 && x >= 0 && y >= 0 && y < 3) {
           Some(xy)
         } else None

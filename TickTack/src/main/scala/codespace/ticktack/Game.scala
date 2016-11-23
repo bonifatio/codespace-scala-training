@@ -7,8 +7,9 @@ trait Game {
 
   case class State(field:Field,a:Player,b:Player)
   {
+    def isWin: Boolean = rules.isWin(field) != None
 
-    def endOfGame: Boolean = rules.isWin(field) != None
+    def endOfGame: Boolean = isWin|| rules.isDraw(field)
 
     def step():State =
     {
@@ -24,18 +25,21 @@ trait Game {
         }
       }
     }
-
-
-
   }
 
-  def play(a:Player,b:Player):Field = {
+  def play(a:Player,b:Player): (Field, Boolean, Label) = {
      var s = State(rules.emptyField,a,b)
-     while(!s.endOfGame) {
-       s = s.step()
-     }
-     s.field
-  }
 
+     while(!s.endOfGame) {
+       println()
+       println(s"Turn of ${s.a.label}:")
+
+       s = s.step()
+
+       s.field.dump()
+     }
+
+    (s.field, s.isWin, s.b.label)
+  }
 
 }
