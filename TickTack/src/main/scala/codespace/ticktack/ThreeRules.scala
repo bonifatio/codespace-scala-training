@@ -1,6 +1,8 @@
 package codespace.ticktack
 
-class ThreeRules extends Rules {
+import scala.util.Try
+
+object ThreeRules extends Rules {
 
    //data
    //   data(0) ***
@@ -21,17 +23,19 @@ class ThreeRules extends Rules {
       data(i)(j)
     }
 
-    override def put(i: Int, j: Int, l: Label): Field =
+    override def put(i: Int, j: Int, l: Label): Either[String,Field] =
     {
-      checkCorrect(i,j)
-      get(i,j) match {
-        case Some(label) =>
-          throw new IllegalArgumentException("label already filled")
-        case None   =>
-          val nextRow: IndexedSeq[Option[Label]] = data(i).patch(j,Seq(Some(l)),1)
-          val nextData: IndexedSeq[IndexedSeq[Option[Label]]] = data.patch(i,Seq(nextRow),1)
-          ThreeField(nextData)
-      }
+     Try {
+       checkCorrect(i, j)
+       get(i, j) match {
+         case Some(label) =>
+           throw new IllegalArgumentException("label already filled")
+         case None =>
+           val nextRow: IndexedSeq[Option[Label]] = data(i).patch(j, Seq(Some(l)), 1)
+           val nextData: IndexedSeq[IndexedSeq[Option[Label]]] = data.patch(i, Seq(nextRow), 1)
+           ThreeField(nextData)
+       }
+     }.toEither.left.map(_.getMessage)
     }
 
     def checkCorrect(i:Int,j:Int):Unit =
@@ -55,7 +59,6 @@ class ThreeRules extends Rules {
         println()
       }
     }
-
   }
 
   override def isCorrect(ij: (Int, Int), f: Field, l: Label): Boolean =
@@ -78,21 +81,22 @@ class ThreeRules extends Rules {
 
     def verticalWin(col:Int):Option[Label] = {
       f.get(0,col) flatMap { l =>
-         if (f.get(1,col)==Some(l) && f.get(2,col)==Some(l))
+         if (f.get(1,col)==Some(l) && f.get(2,col)==Some(l)) {
             Some(l)
+         }
          else None
       }
     }
 
     def diagonalWin():Option[Label] = {
 
-      def checkLeft(l:Label) = (f.get(0,0) == f.get(2,2)) && (f.get(0,0) == Some(l))
+      def checkLeft(l:Label) = f.get(0,0) == f.get(2,2) && f.get(0,0)==Some(l)
 
-      def checkRight(l:Label) = (f.get(2,0) == f.get(0,2)) && (f.get(2,0) == Some(l))
+      def checkRight(l:Label) = f.get(2,0) == f.get(0,2) && f.get(2,0)==Some(l)
 
       f.get(1,1) flatMap { l =>
          if (checkLeft(l)||checkRight(l))
-           Some(l)
+            Some(l)
          else
            None
       }
@@ -115,7 +119,7 @@ class ThreeRules extends Rules {
   override def isDraw(f: Field): Boolean = {
 
     def scanLabels(fnc: Int => Option[Label]): Boolean = {
-      (0 to 2).map(fnc).filter(!_.isEmpty).length != 2
+      (0 to 2).map(fnc).filter(!_.isEmpty).distinct.length != 2
     }
 
     def scanRows(): Boolean = {

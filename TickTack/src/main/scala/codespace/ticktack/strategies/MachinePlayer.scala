@@ -4,7 +4,7 @@ import codespace.ticktack.{Field, Label, Player, Rules}
 
 class MachinePlayer(label:Label, rules:Rules) extends BasePlayer(label, rules) {
 
-  override def nextStep(f: Field): ((Int, Int), Player) = {
+  override def nextStep(f: Field): Either[String, ((Int, Int), Player)]  = {
     var bestStep = (-1, -1)
     var bestScore = -1
     var win:Boolean = false
@@ -68,8 +68,8 @@ class MachinePlayer(label:Label, rules:Rules) extends BasePlayer(label, rules) {
 
           var score = getHorizontalScore(i, j) + getVerticalScore(i, j)
 
-          if(i == j) score += mainDiagonalScore + secondaryDiagonalScore
-          else if (i == 2 -j) score += secondaryDiagonalScore
+          if(i == j) score += mainDiagonalScore
+          if(i == 2-j) score += secondaryDiagonalScore
 
           if (isCorner(i, j)) score += 3 * blockingScore
           else if (isCenter(i, j)) score += 4 * blockingScore
@@ -85,7 +85,7 @@ class MachinePlayer(label:Label, rules:Rules) extends BasePlayer(label, rules) {
       }
     }
 
-    (bestStep, this)
+    Right((bestStep, this))
   }
 
   override def tell(s: String): Player = {

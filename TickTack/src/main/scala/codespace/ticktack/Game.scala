@@ -1,6 +1,5 @@
 package codespace.ticktack
 
-//TODO: pass to github
 trait Game {
 
   val rules: Rules
@@ -11,35 +10,37 @@ trait Game {
 
     def endOfGame: Boolean = isWin|| rules.isDraw(field)
 
-    def step():State =
+    def step(): Either[String,State] =
     {
       if (endOfGame)
-        this
+        Left("Game Over")
       else {
-        val (ij,nextA) = a.nextStep(field)
-        if (rules.isCorrect(ij,field,a.label)) {
-          val nextField = field.put(ij._1, ij._2, a.label)
+        for { ijn <- a.nextStep(field)
+              ((i, j), nextA) = ijn
+              nextField <- field.put(i, j, a.label)
+        } yield {
           State(nextField, b, nextA)
-        }else{
-          State(field,nextA.tell("Bad step"),b)
         }
       }
     }
   }
 
   def play(a:Player,b:Player): (Field, Boolean, Label) = {
-     var s = State(rules.emptyField,a,b)
+     var s = State(rules.emptyField, a, b)
 
      while(!s.endOfGame) {
        println()
        println(s"Turn of ${s.a.label}:")
 
-       s = s.step()
+       s = s.step() match {
+         case Left(message) => s.a.tell(message)
+                                s
+         case Right(s1) => s1
+       }
 
        s.field.dump()
      }
 
     (s.field, s.isWin, s.b.label)
   }
-
 }
